@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        const uniqueUserId = Date.now() + Math.random(); // for network log
+        const num_images = {
+            '/cat/': 1668, '/chicken/': 3098, '/cow/': 1866, '/dog/': 4863,
+            '/elephant/': 1446, '/horse/': 2623, '/sheep/': 1820, '/squirrel/': 1862
+        };
+        const folders = Object.keys(num_images);
+        let duringControl = false;
+        let duringExperimental = false;
+        document.onkeydown = function (event) {
+            if (duringControl) {
+                if (event.key === "y") controlConfirm();
+                else if (event.key === "n") controlDecline();
+            }
+            else if (duringExperimental) {
+                if (event.key === " ") {
+                    experimentalConfirm();
+                }
+            }
+        }
+
+
+        //PART 1 START--------------------------------------------------------------------------------------------------
+        const numImagesInPartOne = 10;
+        // each entry in the following array has attributes: image_name, image_positive?, reaction_time, worker_choice
+        const resultPartOne = [];
+        let atIndexInPartOne;
+        let imagesUsedInPartOne;
+        let startTime;
+        function startPartOne() {
+            document.getElementById("start-1-button").remove();
+            document.getElementById("control-instruction-label").innerHTML = "Reminder: Click Y when see dog, otherwise click N";
+            duringControl = true;
+
+            imagesUsedInPartOne = collectImages(numImagesInPartOne);
+            atIndexInPartOne = 0;
+            loadImageFromTo(imagesUsedInPartOne, atIndexInPartOne, "control-condition-img");
+            startTime = new Date();
+        }
+        function controlConfirm() {
+            // save result
+            resultPartOne.push([imagesUsedInPartOne[atIndexInPartOne][0], imagesUsedInPartOne[atIndexInPartOne][1], new Date() - startTime, true])
+            // update progress
+            document.getElementById("progress-label-1").innerHTML = "Completed: " + (atIndexInPartOne+1) + "/" + numImagesInPartOne + ".";
+            // update image index
+            if (++atIndexInPartOne === numImagesInPartOne) finishPartOne();
+            loadImageFromTo(imagesUsedInPartOne, atIndexInPartOne, "control-condition-img");
+            startTime = new Date();
+        }
+        function controlDecline() {
+            // save result
+            resultPartOne.push([imagesUsedInPartOne[atIndexInPartOne][0], imagesUsedInPartOne[atIndexInPartOne][1], new Date() - startTime, false])
+            // update progress
+            document.getElementById("progress-label-1").innerHTML = "Completed: " + (atIndexInPartOne+1) + "/" + numImagesInPartOne + ".";
+            // update image index
+            if (++atIndexInPartOne === numImagesInPartOne) finishPartOne();
+            loadImageFromTo(imagesUsedInPartOne, atIndexInPartOne, "control-condition-img");
+            startTime = new Date();
+        }
+        function finishPartOne() {
+            uploadData(resultPartOne);
+            duringControl = false;
+            document.getElementById("control-condition").remove();
+            document.getElementById("experimental-condition").style.visibility = "visible";
+        }
+        //PART 1 END----------------------------------------------------------------------------------------------------
+
+
+        //PART 2 START--------------------------------------------------------------------------------------------------
+        const numImagesInPartTwo = 100;
+        // each entry in the following array has attributes: image_name, image_positive?, worker_clicked?
+        const resultPartTwo = [];
+        let atIndexInPartTwo;
+        let imagesUsedInPartTwo;
+        function startPartTwo() {
+            document.getElementById("start-2-button").remove();
+            duringExperimental = true;
+            document.getElementById("experimental-instruction-label").innerHTML = "Reminder: Click the spacebar when see dog";
+
+            imagesUsedInPartTwo = collectImages(numImagesInPartTwo);
+            atIndexInPartTwo = -1;
+        }
+        function experimentalConfirm() {
+            // the same image should be saved as false-click right before this is reached so remove that
+            resultPartTwo.pop();
+            // replace that removed image with the true-click version
+            resultPartTwo.push([imagesUsedInPartTwo[atIndexInPartTwo][0], imagesUsedInPartTwo[atIndexInPartTwo][1], true]);
+            loadImageFromTo(imagesUsedInPartTwo, atIndexInPartTwo, "now");
+            loadImageFromTo(imagesUsedInPartTwo, Math.max(atIndexInPartTwo-1, 0), "1-ago");
+            loadImageFromTo(imagesUsedInPartTwo, Math.max(atIndexInPartTwo-2, 0), "2-ago");
+            loadImageFromTo(imagesUsedInPartTwo, Math.max(atIndexInPartTwo-3, 0), "3-ago");
+        }
+        function autoImageTransition() {
+            if (duringExperimental) {
+                document.getElementById("progress-label-2").innerHTML = "Passed: " + (atIndexInPartTwo+1) + "/" + numImagesInPartTwo + ".";
+                if (++atIndexInPartTwo === numImagesInPartTwo) {
+                    uploadData(resultPartTwo);
+                    duringExperimental = false;
+                    document.getElementById("experimental-condition").remove();
+                    document.getElementById("final-label").style.visibility = "visible";
+                }
+                resultPartTwo.push([imagesUsedInPartTwo[atIndexInPartTwo][0], imagesUsedInPartTwo[atIndexInPartTwo][1], false])
+                loadImageFromTo(imagesUsedInPartTwo, atIndexInPartTwo, "experimental-condition-img");
+            }
+        }
+        // call this function every 100ms in part 2
+        setInterval(autoImageTransition, 100);
+        // call this function every 100ms to demonstrate the pace of 100ms
+        let count = -1;
+        setInterval(function () {
+            if (count++ > (numImagesInPartOne-1)) count = 0;
+            loadImageFromTo(imagesUsedInPartOne, count, "speed-example")
+        }, 100);
+        //PART 2 END----------------------------------------------------------------------------------------------------
+
+
+        //UTILS START---------------------------------------------------------------------------------------------------
+        function collectImages(numImages) {
+            // each entry of this array is: image_name, image_is_a_dog?
+            let images = [];
+            for (let i = 0; i < numImages; ++i) {
+                const folder = folders[Math.floor(Math.random() * folders.length)];
+                const size = num_images[folder];
+                images.push([folder + Math.floor(Math.random() * size), folder === "/dog/"]);
+            }
+            return images;
+        }
+        function loadImageFromTo(images, atIndex, sectionId) {
+            document.getElementById(sectionId).src = "./images" + images[atIndex][0] + ".jpg";
+        }
+        function uploadData(data) {
+            if (data === resultPartOne) {
+                for (const item of data) {
+                    sendNetworkLog(uniqueUserId, item[0], item[1], item[2], item[3], "None", "None", "None");
+                }
+            }
+            else if (data === resultPartTwo) {
+                for (const item of data) {
+                    sendNetworkLog(uniqueUserId, "None", "None", "None", "None", item[0], item[1], item[2]);
+                }
+            }
+        }
+        function sendNetworkLog(
+            unique_user_id,
+            control_image_name,
+            control_image_positive,
+            control_reaction_time,
+            control_worker_choice,
+            experimental_image_name,
+            experimental_image_positive,
+            experimental_clicked
+        ) {
+            const data = {
+                "entry.118283122": unique_user_id,
+                "entry.630329343": control_image_name,
+                "entry.1830486915": control_image_positive,
+                "entry.645719107": control_reaction_time,
+                "entry.1844572864": control_worker_choice,
+                "entry.1292961878": experimental_image_name,
+                "entry.1990953830": experimental_image_positive,
+                "entry.2092784414": experimental_clicked
+            };
+            const params = [];
+            for (let key in data) {
+                params.push(key + "=" + encodeURIComponent(data[key]));
+            }
+            // Submit the form using an image to avoid CORS warnings.
+            (new Image).src = "https://docs.google.com/forms/d/1qRVvnBFpvLHDXaoRMgFC9BxaQ7XYg7RJSBvQBTXLUC8/formResponse?" + params.join("&");
+        }
+        //UTILS END-----------------------------------------------------------------------------------------------------
+
+    </script>
+    <title>Rapid Crowdsourcing</title>
+</head>
+<body style="font-family: Verdana,sans-serif">
+<header>
+
+</header>
+<main>
+
+    <section id="control-condition">
+        <div>
+            <h1 style="font-size: 50px;">Control Condition</h1>
+            <p id="control-instruction-label" style="font-size: 20px; line-height: 50px;">
+                Welcome to the Rapid Crowdsourcing Experiement!<br>
+                There are two parts to this experiment.<br>
+                We start with part 1 below. During this part:<br>
+                - A series of images will be shown to you after you click "Play".<br>
+                - After clicking "Play", press <b>Y</b> on your keyboard whenever you see a <b>dog</b>, press <b>N</b> otherwise.<br>
+                - When you have clicked either of these keys, the image will immediately switch to a new one.<br>
+                Note that the response time and correctness are recorded so please be as efficient as possible.<br>
+                <button id="start-1-button" style="width: 100px; height: 50px; background-color: dodgerblue; font-size: 20px;" onclick="startPartOne()">Play</button>
+            </p>
+        </div>
+        <div>
+            <label id="progress-label-1"></label><br>
+            <img id="control-condition-img" height="500px" width="800px" alt="the image for part 1 is shown here">
+        </div>
+    </section>
+
+    <section id="experimental-condition" style="visibility: hidden; font-size: 20px; line-height: 50px;">
+        <div>
+            <h1 style="font-size: 50px;">Experimental Condition</h1>
+            <p id="experimental-instruction-label">
+                Thank you for finishing part 1 of this experiment!<br>
+                Welcome to part 2 (last part)! During this part:<br>
+                - A series of images will be rapidly shown to you after you click "Play".<br>
+                - After clicking "Play", press <b>spacebar</b> whenever you see a <b>dog</b>.<br>
+                - The images will go by really fast so be prepared.<br>
+                <em>This is a demonstration of how fast it will be:</em>
+                <img id="speed-example" style="height: 100px; width: 150px; border: black solid 5px;"><br>
+                - We understand that you will not be able to react on time for all the correct images.<br>
+                So try to do the best you can. We know the answer to a few of the images and will<br>
+                accept your hit if you get those right.<br>
+                <button id="start-2-button" style="width: 100px; height: 50px; background-color: dodgerblue; font-size: 20px;" onclick="startPartTwo()">Play</button>
+            </p>
+        </div>
+        <div>
+            <label id="progress-label-2"></label><br>
+            <img id="experimental-condition-img" height="500px" width="800px" alt="the image for part 2 is shown here"><br>
+            <label>The last 3 images and the clicked one (in red box):</label>
+            <img id="3-ago" height="100px" width="150px">
+            <img id="2-ago" height="100px" width="150px">
+            <img id="1-ago" height="100px" width="150px">
+            <img id="now" height="100px" width="150px" style="border: red solid 5px">
+        </div>
+    </section>
+
+</main>
+<footer>
+    <p id="final-label" style="visibility: hidden; font-size: 20px; line-height: 50px;">
+        That is the end of this experiment.<br>
+        <b>Thank you for your participation!</b><br>
+        You may exit whenever you are ready.
+    </p>
+</footer>
+</body>
+</html>
