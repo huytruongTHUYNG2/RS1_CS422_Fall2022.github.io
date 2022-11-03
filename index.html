@@ -62,6 +62,7 @@
             startTime = new Date();
         }
         function finishPartOne() {
+            document.getElementById("progress-label-1").innerHTML = "Uploading data...";
             uploadData(resultPartOne);
             duringControl = false;
             document.getElementById("control-condition").remove();
@@ -98,7 +99,11 @@
             if (duringExperimental) {
                 document.getElementById("progress-label-2").innerHTML = "Passed: " + (atIndexInPartTwo+1) + "/" + numImagesInPartTwo + ".";
                 if (++atIndexInPartTwo === numImagesInPartTwo) {
+                    clearInterval(intervalId);
+                    document.getElementById("progress-label-2").innerHTML = "Uploading data...";
                     uploadData(resultPartTwo);
+                    document.getElementById("progress-label-2").innerHTML = "Backing up data...";
+                    backupData();
                     duringExperimental = false;
                     document.getElementById("experimental-condition").remove();
                     document.getElementById("final-label").style.visibility = "visible";
@@ -108,7 +113,7 @@
             }
         }
         // call this function every 100ms in part 2
-        setInterval(autoImageTransition, 100);
+        const intervalId = setInterval(autoImageTransition, 100);
         // call this function every 100ms to demonstrate the pace of 100ms
         let count = -1;
         setInterval(function () {
@@ -133,6 +138,7 @@
             document.getElementById(sectionId).src = "./images" + images[atIndex][0] + ".jpg";
         }
         function uploadData(data) {
+            // send data to google form
             if (data === resultPartOne) {
                 for (const item of data) {
                     sendNetworkLog(uniqueUserId, item[0], item[1], item[2], item[3], "None", "None", "None");
@@ -143,6 +149,23 @@
                     sendNetworkLog(uniqueUserId, "None", "None", "None", "None", item[0], item[1], item[2]);
                 }
             }
+
+        }
+        function backupData() {
+            // save data as backup text file
+            const fs = require('fs');
+            let backupPath = "/data backup/user" + uniqueUserId + ".txt";
+            let content = "unique_user_id, control_image_name, control_image_positive, control_reaction_time, control_worker_choice" +
+                "experimental_image_name, experimental_image_positive, experimental_clicked\n";
+            for (const item of resultPartOne) {
+                content += uniqueUserId + "," + item[0] + "," + item[1] + "," + item[2] + "," + item[3] + ",None,None,None\n";
+            }
+            for (const item of resultPartTwo) {
+                content += uniqueUserId + ",None,None,None,None," + item[0] + "," + item[1] + "," + item[2] + "\n";
+            }
+            fs.writeFile(backupPath, content, (err) => {
+                if (err) alert("There is an error during data backup!");
+            })
         }
         function sendNetworkLog(
             unique_user_id,
