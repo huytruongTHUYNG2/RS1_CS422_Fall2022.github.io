@@ -112,14 +112,14 @@
                 loadImageFromTo(imagesUsedInPartTwo, atIndexInPartTwo, "experimental-condition-img");
             }
         }
-        // call this function every 100ms in part 2
-        const intervalId = setInterval(autoImageTransition, 100);
-        // call this function every 100ms to demonstrate the pace of 100ms
+        // call this function every 500ms in part 2
+        const intervalId = setInterval(autoImageTransition, 500);
+        // call this function every 500ms to demonstrate the pace of 500ms
         let count = -1;
         setInterval(function () {
             if (count++ > (numImagesInPartOne-1)) count = 0;
             loadImageFromTo(imagesUsedInPartOne, count, "speed-example")
-        }, 100);
+        }, 500);
         //PART 2 END----------------------------------------------------------------------------------------------------
 
 
@@ -165,6 +165,7 @@
             }
             fs.writeFile(backupPath, content, (err) => {
                 if (err) alert("There is an error during data backup!");
+                else alert("Backup completed.")
             })
         }
         function sendNetworkLog(
@@ -210,7 +211,7 @@
             <h1 style="font-size: 50px;">Control Condition</h1>
             <p id="control-instruction-label" style="font-size: 20px; line-height: 50px;">
                 Welcome to the Rapid Crowdsourcing Experiement!<br>
-                There are two parts to this experiment.<br>
+                There are two parts to this experiment. It would take about 10-15 minutes on average to complete this experiment.<br>
                 We start with part 1 below. During this part:<br>
                 - A series of images will be shown to you after you click "Play".<br>
                 - After clicking "Play", press <b>Y</b> on your keyboard whenever you see a <b>dog</b>, press <b>N</b> otherwise.<br>
