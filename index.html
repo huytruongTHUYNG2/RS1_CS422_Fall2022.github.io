@@ -3,7 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <script>
+
+        //EXPERIMENTAL PARAMETERS START---------------------------------------------------------------------------------
+        const numImagesInPartOne = 10;
+        const numImagesInPartTwo = 100;
+        const imageTransitionSpeed = 500; // in milliseconds
+        //EXPERIMENTAL PARAMETERS END-----------------------------------------------------------------------------------
+
+
         const uniqueUserId = Date.now() + Math.random(); // for network log
+
         const num_images = {
             '/cat/': 1668, '/chicken/': 3098, '/cow/': 1866, '/dog/': 4863,
             '/elephant/': 1446, '/horse/': 2623, '/sheep/': 1820, '/squirrel/': 1862
@@ -25,7 +34,6 @@
 
 
         //PART 1 START--------------------------------------------------------------------------------------------------
-        const numImagesInPartOne = 10;
         // each entry in the following array has attributes: image_name, image_positive?, reaction_time, worker_choice
         const resultPartOne = [];
         let atIndexInPartOne;
@@ -72,7 +80,6 @@
 
 
         //PART 2 START--------------------------------------------------------------------------------------------------
-        const numImagesInPartTwo = 100;
         // each entry in the following array has attributes: image_name, image_positive?, worker_clicked?
         const resultPartTwo = [];
         let atIndexInPartTwo;
@@ -112,14 +119,14 @@
                 loadImageFromTo(imagesUsedInPartTwo, atIndexInPartTwo, "experimental-condition-img");
             }
         }
-        // call this function every 500ms in part 2
-        const intervalId = setInterval(autoImageTransition, 500);
-        // call this function every 500ms to demonstrate the pace of 500ms
+        // call this function every at a specified pace
+        const intervalId = setInterval(autoImageTransition, imageTransitionSpeed);
+        // demonstrate the pace of image transition
         let count = -1;
         setInterval(function () {
             if (count++ > (numImagesInPartOne-1)) count = 0;
             loadImageFromTo(imagesUsedInPartOne, count, "speed-example")
-        }, 500);
+        }, imageTransitionSpeed);
         //PART 2 END----------------------------------------------------------------------------------------------------
 
 
@@ -154,16 +161,17 @@
         function backupData() {
             // save data as backup text file
             const fs = require('fs');
-            let backupPath = "/data backup/user" + uniqueUserId + ".txt";
             let content = "unique_user_id, control_image_name, control_image_positive, control_reaction_time, control_worker_choice" +
                 "experimental_image_name, experimental_image_positive, experimental_clicked\n";
             for (const item of resultPartOne) {
-                content += uniqueUserId + "," + item[0] + "," + item[1] + "," + item[2] + "," + item[3] + ",None,None,None\n";
+                content += uniqueUserId + "," + item[0].toString() + "," + item[1].toString() + "," + item[2].toString() +
+                    "," + item[3].toString() + ",None,None,None\n";
             }
             for (const item of resultPartTwo) {
-                content += uniqueUserId + ",None,None,None,None," + item[0] + "," + item[1] + "," + item[2] + "\n";
+                content += uniqueUserId + ",None,None,None,None," + item[0].toString() + "," + item[1].toString() +
+                    "," + item[2].toString() + "\n";
             }
-            fs.writeFile(backupPath, content, (err) => {
+            fs.writeFile("/data backup/user" + uniqueUserId + ".txt", content, (err) => {
                 if (err) alert("There is an error during data backup!");
                 else alert("Backup completed.")
             })
