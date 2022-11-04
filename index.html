@@ -109,8 +109,6 @@
                     clearInterval(intervalId);
                     document.getElementById("progress-label-2").innerHTML = "Uploading data...";
                     uploadData(resultPartTwo);
-                    document.getElementById("progress-label-2").innerHTML = "Backing up data...";
-                    backupData();
                     duringExperimental = false;
                     document.getElementById("experimental-condition").remove();
                     document.getElementById("final-label").style.visibility = "visible";
@@ -157,24 +155,6 @@
                 }
             }
 
-        }
-        function backupData() {
-            // save data as backup text file
-            const fs = require('fs');
-            let content = "unique_user_id, control_image_name, control_image_positive, control_reaction_time, control_worker_choice" +
-                "experimental_image_name, experimental_image_positive, experimental_clicked\n";
-            for (const item of resultPartOne) {
-                content += uniqueUserId + "," + item[0].toString() + "," + item[1].toString() + "," + item[2].toString() +
-                    "," + item[3].toString() + ",None,None,None\n";
-            }
-            for (const item of resultPartTwo) {
-                content += uniqueUserId + ",None,None,None,None," + item[0].toString() + "," + item[1].toString() +
-                    "," + item[2].toString() + "\n";
-            }
-            fs.writeFile("/data backup/user" + uniqueUserId + ".txt", content, (err) => {
-                if (err) alert("There is an error during data backup!");
-                else alert("Backup completed.")
-            })
         }
         function sendNetworkLog(
             unique_user_id,
